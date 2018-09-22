@@ -1,9 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, View, Dimensions, Animated, TouchableHighlight } from 'react-native';
+import GradientArray from '../../calculateGradient';
 
+const Gradient = new GradientArray();
 const device_height = Dimensions.get('window').height;
-
-console.log(device_height);
 
 export default class Speedometer extends React.Component {
 
@@ -15,13 +15,9 @@ export default class Speedometer extends React.Component {
             currentSpeedValue: 12,
             currentSpeedAnim: new Animated.Value(12),
             recommendedSpeed: 12,
-            outerRingRadius: 124,
+            outerRingRadius: 128,
             digitRingRadius: 165,
         }
-    }
-
-    setCurrentSpeed() {
-        return this.setSpeed(this.state.currentSpeed);
     }
 
     setRecommendedSpeed() {
@@ -32,7 +28,7 @@ export default class Speedometer extends React.Component {
     }
 
     getRecommendedColor() {
-        return (this.state.recommendedSpeed < this.state.currentSpeed) ? '#A73F3A' : '#A1C064'
+        return (this.state.recommendedSpeed < this.state.currentSpeed) ? '#E17B74' : '#7ACAA7'
     }
 
     setRecommendedSpeedValue() {
@@ -43,7 +39,7 @@ export default class Speedometer extends React.Component {
     }
     
     setSpeed(value) {
-        let angle = 230 - (value * 2) * 7,
+        angle = 225 - (value * 5) * 2.7;
             theta = (angle * Math.PI) / 180,
             radius = this.state.outerRingRadius + 4,
             x = Math.cos(theta) * radius,
@@ -55,7 +51,7 @@ export default class Speedometer extends React.Component {
     }
 
     resetSpeedValueAngle(value) {
-        let angle = 230 - (value * 2) * 7;
+        let angle = 225 - (value * 5) * 2.7;
 
         return {
             transform: [{rotate: angle + 'deg'}]
@@ -64,33 +60,39 @@ export default class Speedometer extends React.Component {
 
     createTicks() {
         let ticks = [], angle, theta, radius, x, y;
+        const gradients = Gradient.generateGradient('#4F5154', '#1D96B1', this.state.currentSpeed * 5); 
 
-        for(let i = 0; i < 41; i++) {
+        for(let i = 0; i < 101; i++) {
 
-            angle = 230 - i * 7;
+            angle = 225 - i * 2.7;
             theta = (angle * Math.PI) / 180;
             radius = this.state.outerRingRadius + 4;
             x = Math.cos(theta) * radius;
             y = Math.sin(theta) * -radius;
 
-            let currentSpeedTickIndex = this.state.currentSpeed * 2;
-            let recommendedSpeedTickIndex = this.state.recommendedSpeed * 2;
-            let color = '#fff';
+            let currentSpeedTickIndex = this.state.currentSpeed * 5;
+            let recommendedSpeedTickIndex = this.state.recommendedSpeed * 5;
+            let color = (gradients[i] !== undefined) ? gradients[i] : 'rgba(255,255,255,.2)';
+            let width = 10;
 
             if(recommendedSpeedTickIndex > currentSpeedTickIndex) {
                 if(i > currentSpeedTickIndex && i < recommendedSpeedTickIndex) {
-                    color = '#A1C064';
+                    color = '#7ACAA7';
                 }
             } else {
                 if(i < currentSpeedTickIndex && i > recommendedSpeedTickIndex) {
-                    color = '#A73F3A';
+                    color = '#E17B74';
                 }
+            }
+
+            if((i / 5) % 5 === 0) {
+                width = 20;
             }
 
             ticks.push(
                 <View 
                     key={i}
-                    style={[styles.tick, { borderTopColor: color, transform: [ {translateX: x}, {translateY: y}, {rotate: -angle + 'deg'} ] } ]}>
+                    style={[styles.tick, { width, borderTopColor: color, transform: [ {translateX: x}, {translateY: y}, {rotate: -angle + 'deg'} ] } ]}>
                 </View>
             )
         }
@@ -101,7 +103,7 @@ export default class Speedometer extends React.Component {
         let digits = [], angle, theta, x, y;
         for(let i = 0; i < 5; i++) {
 
-            angle = 230 - i * 70;
+            angle = 225 - i * 67.5;
             theta = (angle * Math.PI) / 180;
             x = Math.cos(theta) * this.state.digitRingRadius;
             y = Math.sin(theta) * -this.state.digitRingRadius;
@@ -117,20 +119,25 @@ export default class Speedometer extends React.Component {
     }
 
     componentDidMount() {
+
         setInterval(() => {
             let randNumber = Math.random(), newSpeed;
 
-            // speed change between -.5 & .5
-            if(randNumber > .4 && randNumber < .6) {
-                newSpeed = this.state.currentSpeed;
-            } else if(randNumber > .8) {
-                newSpeed = this.state.currentSpeed + 1;
-            } else if(randNumber > .6){
+            if(this.state.currentSpeed <= 0) {
                 newSpeed = this.state.currentSpeed + .5;
-            } else if(randNumber < .2) {
-                newSpeed = this.state.currentSpeed - 1;
             } else {
-                newSpeed = this.state.currentSpeed - .5;
+                // speed change between -.5 & .5
+                if(randNumber > .4 && randNumber < .6) {
+                    newSpeed = this.state.currentSpeed;
+                } else if(randNumber > .8) {
+                    newSpeed = this.state.currentSpeed + 1;
+                } else if(randNumber > .6){
+                    newSpeed = this.state.currentSpeed + .5;
+                } else if(randNumber < .2) {
+                    newSpeed = this.state.currentSpeed - 1;
+                } else {
+                    newSpeed = this.state.currentSpeed - .5;
+                }
             }
 
             // speeds between 8 and 12
@@ -164,8 +171,8 @@ export default class Speedometer extends React.Component {
     calculateOffsets() {
         let xs = [], ys = [], angles = [], angle, theta, radius, x, y;
 
-        for(let i = 0; i < 21; i++) {
-            angle = 230 - (i * 2) * 7;
+        for(let i = 0; i < 101; i++) {
+            angle = 225 - (i * 5) * 2.7;
             theta = (angle * Math.PI) / 180;
             radius = this.state.outerRingRadius + 4;
             x = Math.cos(theta) * radius;
@@ -188,23 +195,24 @@ export default class Speedometer extends React.Component {
         let { currentSpeedAnim } = this.state;
 
         let currentSpeedX = currentSpeedAnim.interpolate({
-            inputRange: [...Array(21).keys()],
+            inputRange: [...Array(101).keys()],
             outputRange: offsets.xs
         })
 
         let currentSpeedY = currentSpeedAnim.interpolate({
-            inputRange: [...Array(21).keys()],
+            inputRange: [...Array(101).keys()],
             outputRange: offsets.ys
         })
 
         let currentSpeedRot = currentSpeedAnim.interpolate({
-            inputRange: [...Array(21).keys()],
+            inputRange: [...Array(101).keys()],
             outputRange: offsets.angles
         })
 
         return (
             <View style={styles.speedometerContainer}>
                 <View>
+                    {/* <View style={styles.innerRing}></View> */}
                     <View style={styles.outerRing}>
                         <View>
                             {this.createTicks()}
@@ -217,7 +225,7 @@ export default class Speedometer extends React.Component {
                             {/* <View style={[styles.currentSpeed, this.setCurrentSpeed()]}></View> */}
                         </View>
                         <View>
-                            <View style={[styles.recommendedSpeed, this.setRecommendedSpeed()]}> 
+                            <View style={[styles.recommendedSpeed, this.setRecommendedSpeed(), {zIndex: 9999}]}> 
                                 <Text style={[styles.recommendedSpeedValue, this.setRecommendedSpeedValue()]}>{this.state.recommendedSpeed}</Text>
                             </View>
                         </View>
@@ -239,13 +247,25 @@ const styles = StyleSheet.create({
     speedometerContainer: {
         maxWidth: 400,
         height: '100%',
-        backgroundColor: '#A6D4D0',
+        backgroundColor: '#22252B',
+    },
+    innerRing: {
+        width: 285,
+        height: 285,
+        position: 'absolute', 
+        top: 157.5,
+        alignSelf: 'center',
+        borderColor: '#fff',
+        borderWidth: 3, 
+        borderBottomColor: 'transparent',
+        borderRadius: 285/2,
+        zIndex: 1,
     },
     outerRing: {
         width: 300,
         height: 300,
         borderRadius: 300/2,
-        backgroundColor: '#5FA49D',
+        backgroundColor: '#22252B',
         display: 'flex',
         justifyContent: 'center',
         alignSelf: 'center',
@@ -253,7 +273,7 @@ const styles = StyleSheet.create({
         top: 150,
     },
     tick: {
-        width: 20,
+        //width: 10,
         borderTopWidth: 2,
         borderTopColor: '#fff',
         position: 'absolute',
@@ -309,6 +329,6 @@ const styles = StyleSheet.create({
     button: {
         alignSelf: 'center',
         top: device_height / 2,
-        display: 'none'
+        // display: 'none'
     }
 });

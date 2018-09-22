@@ -11,7 +11,12 @@ const Application = createStackNavigator(
                 header: null,
             })
         },
-        Maps
+        Maps: {
+            screen: Maps,
+            navigationOptions: ({ navigation }) => ({
+                header: null,
+            })
+        }
     },
     {
         initialRouteName: 'Speedometer',
