@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions, Animated, TouchableHighlight } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, Animated, TouchableHighlight, Easing } from 'react-native';
 import GradientArray from '../../calculateGradient';
 
 const Gradient = new GradientArray();
@@ -28,7 +28,7 @@ export default class Speedometer extends React.Component {
     }
 
     getRecommendedColor() {
-        return (this.state.recommendedSpeed < this.state.currentSpeed) ? '#E17B74' : '#7ACAA7'
+        return (this.state.recommendedSpeed < this.state.currentSpeedValue) ? '#E17B74' : '#7ACAA7'
     }
 
     setRecommendedSpeedValue() {
@@ -60,7 +60,7 @@ export default class Speedometer extends React.Component {
 
     createTicks() {
         let ticks = [], angle, theta, radius, x, y;
-        const gradients = Gradient.generateGradient('#4F5154', '#1D96B1', this.state.currentSpeed * 5); 
+        const gradients = Gradient.generateGradient('#4F5154', '#1D96B1', this.state.currentSpeedValue * 5); 
 
         for(let i = 0; i < 101; i++) {
 
@@ -70,29 +70,24 @@ export default class Speedometer extends React.Component {
             x = Math.cos(theta) * radius;
             y = Math.sin(theta) * -radius;
 
-            let currentSpeedTickIndex = this.state.currentSpeed * 5;
+            let currentSpeedTickIndex = this.state.currentSpeedValue * 5;
             let recommendedSpeedTickIndex = this.state.recommendedSpeed * 5;
             let color = (gradients[i] !== undefined) ? gradients[i] : 'rgba(255,255,255,.2)';
-            let width = 10;
 
             if(recommendedSpeedTickIndex > currentSpeedTickIndex) {
-                if(i > currentSpeedTickIndex && i < recommendedSpeedTickIndex) {
+                if(i >= currentSpeedTickIndex && i <= recommendedSpeedTickIndex) {
                     color = '#7ACAA7';
                 }
             } else {
-                if(i < currentSpeedTickIndex && i > recommendedSpeedTickIndex) {
+                if(i <= currentSpeedTickIndex && i > recommendedSpeedTickIndex) {
                     color = '#E17B74';
                 }
-            }
-
-            if((i / 5) % 5 === 0) {
-                width = 20;
             }
 
             ticks.push(
                 <View 
                     key={i}
-                    style={[styles.tick, { width, borderTopColor: color, transform: [ {translateX: x}, {translateY: y}, {rotate: -angle + 'deg'} ] } ]}>
+                    style={[styles.tick, { borderTopColor: color, transform: [ {translateX: x}, {translateY: y}, {rotate: -angle + 'deg'} ] } ]}>
                 </View>
             )
         }
@@ -124,20 +119,17 @@ export default class Speedometer extends React.Component {
             let randNumber = Math.random(), newSpeed;
 
             if(this.state.currentSpeed <= 0) {
-                newSpeed = this.state.currentSpeed + .5;
+                newSpeed = this.state.currentSpeed + .1;
+            } else if(this.state.currentSpeed >= 20) {
+                newSpeed = this.state.currentSpeed - .1;
             } else {
-                // speed change between -.5 & .5
                 if(randNumber > .4 && randNumber < .6) {
                     newSpeed = this.state.currentSpeed;
-                } else if(randNumber > .8) {
-                    newSpeed = this.state.currentSpeed + 1;
-                } else if(randNumber > .6){
-                    newSpeed = this.state.currentSpeed + .5;
-                } else if(randNumber < .2) {
-                    newSpeed = this.state.currentSpeed - 1;
+                } else if(randNumber > .6) {
+                    newSpeed = this.state.currentSpeed + .1;
                 } else {
-                    newSpeed = this.state.currentSpeed - .5;
-                }
+                    newSpeed = this.state.currentSpeed - .1;
+                } 
             }
 
             // speeds between 8 and 12
@@ -145,27 +137,29 @@ export default class Speedometer extends React.Component {
             // let newSpeed = speeds[Math.floor(Math.random() * 9)];
 
             // all speeds 
-            //let newSpeed = parseFloat((Math.round(Math.random() * 40) / 2).toFixed(1))
+            // let newSpeed = parseFloat((Math.round(Math.random() * 40) / 2).toFixed(1))
 
             this.setState({
                 previousSpeed: this.state.currentSpeed,
                 currentSpeed: newSpeed
             });
             this.state.currentSpeedAnim.addListener(({value}) => {
-                if(parseFloat((Math.round(value * 2) / 2).toFixed(1)) !== this.state.currentSpeedValue) {
-                    this.setState({currentSpeedValue: parseFloat((Math.round(value * 2) / 2).toFixed(1))})
+                if(parseFloat(value.toFixed(1)) !== this.state.currentSpeedValue) {
+                    this.setState({currentSpeedValue: parseFloat(value.toFixed(1))})
+                    //this.setState({currentSpeed: parseFloat(value.toFixed(1))})
                 }
             });
             Animated.timing(
                 this.state.currentSpeedAnim,
                 {
                 toValue: newSpeed,
-                duration: 1000,
+                duration: 500,
+                easing: Easing.elastic(1)
                 }
             ).start();
             this.state.currentSpeedAnim.removeListener();
         }
-        , 1500) 
+        , 200) 
     }
 
     calculateOffsets() {
@@ -222,10 +216,8 @@ export default class Speedometer extends React.Component {
                         </View>
                         <View>
                             <Animated.View style={[styles.currentSpeed, {transform: [ {translateX: currentSpeedX}, {translateY: currentSpeedY}, {rotate: currentSpeedRot} ]}]}></Animated.View>
-                            {/* <View style={[styles.currentSpeed, this.setCurrentSpeed()]}></View> */}
-                        </View>
-                        <View>
-                            <View style={[styles.recommendedSpeed, this.setRecommendedSpeed(), {zIndex: 9999}]}> 
+                        
+                            <View style={[styles.recommendedSpeed, this.setRecommendedSpeed()]}> 
                                 <Text style={[styles.recommendedSpeedValue, this.setRecommendedSpeedValue()]}>{this.state.recommendedSpeed}</Text>
                             </View>
                         </View>
@@ -273,7 +265,7 @@ const styles = StyleSheet.create({
         top: 150,
     },
     tick: {
-        //width: 10,
+        width: 10,
         borderTopWidth: 2,
         borderTopColor: '#fff',
         position: 'absolute',
@@ -287,6 +279,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 40, 
         alignSelf: 'center',
+        zIndex: 10,
     },
     recommendedSpeed: {
         width: 100,
