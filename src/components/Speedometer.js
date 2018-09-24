@@ -10,7 +10,6 @@ export default class Speedometer extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            previousSpeed: 0,
             currentSpeed: 12,
             currentSpeedValue: 12,
             currentSpeedAnim: new Animated.Value(12),
@@ -137,16 +136,14 @@ export default class Speedometer extends React.Component {
             // let newSpeed = speeds[Math.floor(Math.random() * 9)];
 
             // all speeds 
-            // let newSpeed = parseFloat((Math.round(Math.random() * 40) / 2).toFixed(1))
+            // newSpeed = parseFloat((Math.round(Math.random() * 40) / 2).toFixed(1))
 
             this.setState({
-                previousSpeed: this.state.currentSpeed,
                 currentSpeed: newSpeed
             });
             this.state.currentSpeedAnim.addListener(({value}) => {
                 if(parseFloat(value.toFixed(1)) !== this.state.currentSpeedValue) {
                     this.setState({currentSpeedValue: parseFloat(value.toFixed(1))})
-                    //this.setState({currentSpeed: parseFloat(value.toFixed(1))})
                 }
             });
             Animated.timing(
