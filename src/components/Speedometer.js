@@ -1,6 +1,10 @@
 import React from 'react';
 import { StyleSheet, Text, View, Dimensions, Animated, TouchableHighlight, Easing } from 'react-native';
 import GradientArray from '../../calculateGradient';
+// import Svg, { Ellipse } from 'react-native-svg';
+import { Svg } from 'expo';
+
+// Notificaties sluiten met code?
 
 const Gradient = new GradientArray();
 const device_height = Dimensions.get('window').height;
@@ -59,7 +63,9 @@ export default class Speedometer extends React.Component {
 
     createTicks() {
         let ticks = [], angle, theta, radius, x, y;
-        const gradients = Gradient.generateGradient('#4F5154', '#1D96B1', this.state.currentSpeedValue * 5); 
+        let steps = (this.state.currentSpeedValue >= this.state.recommendedSpeed) ? this.state.recommendedSpeed : this.state.currentSpeedValue;
+        steps *= 5;
+        const gradients = Gradient.generateGradient('#4F5154', '#1D96B1', steps); 
 
         for(let i = 0; i < 101; i++) {
 
@@ -204,6 +210,13 @@ export default class Speedometer extends React.Component {
             <View style={styles.speedometerContainer}>
                 <View>
                     {/* <View style={styles.innerRing}></View> */}
+                    {/* <Svg width="285" height="285">
+                        <Svg.Path 
+                            d="M143.688072,0.750312894 C143.54197,0.749872837 143.395816,0.749652652 143.24961,0.749652652 C64.5490333,0.749652652 0.749610176,64.5490758 0.749610176,143.249653 C0.749610176,221.950229 64.5490333,285.749653 143.24961,285.749653 C221.803982,285.749653 285.512513,222.187055 285.74895,143.688114 L281.364362,143.688114 C281.127893,219.765495 219.382424,281.365037 143.24961,281.365037 C66.9705895,281.365037 5.13422556,219.528673 5.13422556,143.249653 C5.13422556,66.970632 66.9705895,5.13426804 143.24961,5.13426804 C143.395817,5.13426804 143.541971,5.13449522 143.688072,5.13494924 L143.688072,0.750265617 Z" 
+                            fill="red"
+                            transform="translate(143.249304, 143.249653) rotate(-225.000000) translate(-143.249304, -143.249653)"
+                        />
+                    </Svg> */}
                     <View style={styles.outerRing}>
                         <View>
                             {this.createTicks()}
@@ -219,7 +232,7 @@ export default class Speedometer extends React.Component {
                             </View>
                         </View>
                         <View style={styles.speedWrapper}>
-                            <Text style={styles.speed}>{this.state.currentSpeedValue}</Text>
+                            <Text style={styles.speed}>{this.state.currentSpeedValue.toLocaleString('nl-NL')}</Text>
                             <Text style={styles.speedText}>knopen</Text>
                         </View>
                     </View>
